@@ -66,7 +66,7 @@ elif algo == "Hybrid":
         key="hybrid_box"
     )
     n = st.slider("How many results?", 5, 20, 10, key="hybrid_slider")
-    alpha = st.slider("Similarity vs Popularity (α)", 0.0, 1.0, 0.5)
+    alpha = st.slider("Popularity vs Similarity  (α)", 0.0, 1.0, 0.5)
 
     if st.button("Get Hybrid Recommendations"):
         hybrid_list = get_hybrid_recommendations(movie, top_n=n, genres=selected_genres, alpha=alpha)
