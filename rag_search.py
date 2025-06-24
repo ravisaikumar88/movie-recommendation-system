@@ -1,26 +1,20 @@
-import faiss
-import pickle
-import numpy as np
-from sentence_transformers import SentenceTransformer
+# rag_search.py
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
-# Load model and index
-model = SentenceTransformer("all-MiniLM-L6-v2")
-index = faiss.read_index("rag/index.faiss")
+# Load dataset
+df = pd.read_csv("data/movies_metadata.csv", low_memory=False)
+df = df[["title", "overview"]].dropna()
 
-with open("rag/meta.pkl", "rb") as f:
-    metadata = pickle.load(f)
+# Vectorize overviews
+vectorizer = TfidfVectorizer(stop_words="english")
+tfidf_matrix = vectorizer.fit_transform(df["overview"])
 
-def search_movies(query, top_k=3):
-    # Convert query to embedding
-    query_vec = model.encode([query])
-    
-    # Search in FAISS
-    D, I = index.search(np.array(query_vec).astype("float32"), top_k)
-    
-    # Return results
-    results = []
-    for idx in I[0]:
-        results.append(metadata[idx])
+# Search function
+def search_movies(query, top_k=5):
+    query_vec = vectorizer.transform([query])
+    similarity_scores = cosine_similarity(query_vec, tfidf_matrix).flatten()
+    top_indices = similarity_scores.argsort()[::-1][:top_k]
+    results = df.iloc[top_indices][["title", "overview"]].to_dict(orient="records")
     return results
-
-
